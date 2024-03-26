@@ -7,7 +7,7 @@ export const useStore = defineStore('main', {
         id: 1,
         nickname: 'Jax',
         avatar_url: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png',
-        mark_total: 947
+        mark_total: 900
       }
     }
   },

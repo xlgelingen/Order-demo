@@ -8,6 +8,7 @@ export default {
       name: '一门价值百万的课程'
     })
   },
+  data:()=>{return '为什么？'},
   series: () => {
     return Promise.resolve({
       cover_url: null,

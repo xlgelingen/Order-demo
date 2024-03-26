@@ -1,20 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import Order from '../views/Order.vue'
+import OrderView from '../views/OrderView.vue'
 import routesSccess from './success'
+
+const NotFoundView = () => import(/* webpackChunkName: "NotFound" */ '@/views/NotFoundView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'Home',
       component: HomeView
     },
     {
       path: '/order/type/:resourceType/resource/:resourceId',
       name: 'order',
-      component: Order
+      component: OrderView
     },
     {
       path: '/about',
@@ -25,6 +27,11 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     ...routesSccess,
+    {
+      path: '/404',
+      name: 'NotFound',
+      component: NotFoundView
+    },
     {
       path: '/:pathMatch(.*)',
       redirect: '/404'

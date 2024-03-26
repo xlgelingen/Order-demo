@@ -12,6 +12,7 @@ export const ORDER_TYPE_COURSE_SERIES = 5
 export const ORDER_TYPE_DECORATION = 6
 
 export const ORDER_TYPE = {
+  //使用中括号 [] 的目的是为了使用变量作为对象的属性名
   [ORDER_TYPE_COURSE]: '课程',
   [ORDER_TYPE_CAMP]: '实战营',
   [ORDER_TYPE_BIBLE]: '宝典',
@@ -21,8 +22,8 @@ export const ORDER_TYPE = {
 }
 
 // 支付方式
-export const PAY_METHOD_WECHAT = 1
-export const PAY_METHOD_ALIPAY = 2
+export const PAY_METHOD_ALIPAY = 1
+export const PAY_METHOD_WECHAT = 2
 export const PAY_METHOD_HEART = 3
 
 export const PAY_METHOD = {
