@@ -176,7 +176,7 @@ function handleOrderPay() {
     })
     return
   }
-  if (commodity_count.value<=0) {
+  if (commodity_count.value <= 0) {
     ElMessage({
       message: `请添加商品数量`,
       type: 'warning'
@@ -223,22 +223,6 @@ function handleOrderStatusCheck() {
 function handleCloseMsgBox() {
   messageBoxData.value = {}
   messageBoxVisible.value = false
-}
-
-function handleAddCommodityCount(){
-  commodity_count.value ++;
-}
-
-function handleDeclineCommodityCount(){
-  if(commodity_count.value >=1){
-    commodity_count.value --
-  }else{
-    ElMessage({
-      message: `已经清空商品数量了`,
-      type: 'warning'
-    })
-  }
-  return
 }
 
 //私有函数
@@ -461,9 +445,7 @@ function privateHeartCheckbyConfirm() {
               </label>
 
               <label class="tb-count tb-count-content">
-                <div class="tb-count-btn_decrease" @click="handleDeclineCommodityCount">-</div>
-                <input v-model="commodity_count" class="tb-count-input" type="text" name="count">
-                <div class="tb-count-btn_increase" @click="handleAddCommodityCount">+</div>
+                <el-input-number v-model="commodity_count" :min="0" size="small" />
               </label>
               <label class="tb-sum">
                 <template v-if="order.resource_price > 0">¥{{ real_total_amount }}</template>
@@ -719,7 +701,7 @@ function privateHeartCheckbyConfirm() {
         margin-right: 40px;
       }
 
-      .tb-price{
+      .tb-price {
         margin-right: 66px;
       }
 
@@ -749,36 +731,7 @@ function privateHeartCheckbyConfirm() {
         width: 120px;
         margin-right: 40px;
 
-        .tb-count-input {
-          display: inline-block;
-          width: 50px;
-          text-align: center;
-          outline: none;
-          border: 1px solid #dcdfe6;
-        }
-
-        .tb-count-btn_decrease,
-        .tb-count-btn_increase {
-          height: 20px;
-          width: 20px;
-          line-height: 20px;
-          text-align: center;
-          background-color: #fff;
-          border: 1px solid #dcdfe6;
-          background: #f5f7fa;
-          color: #606266;
-        }
-
-        .tb-count-btn_increase {
-          border-radius: 0 4px 4px 0;
-        }
-
-        .tb-count-btn_decrease {
-          border-radius: 4px 0 0 4px;
-
-        }
-
-        &.tb-count-content{
+        &.tb-count-content {
           position: relative;
           left: -26px;
         }
