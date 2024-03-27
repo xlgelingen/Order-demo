@@ -150,6 +150,47 @@ function getData() {
 }
 
 
+function handleOrderPay() {
+  if (!payMethod.value) {
+    ElMessage({
+      message: `请选择支付方式`,
+      type: 'warning'
+    })
+    return
+  }
+  if (commodity_count.value <= 0) {
+    ElMessage({
+      message: `请添加商品数量`,
+      type: 'warning'
+    })
+    return
+  }
+
+  const orderNoPromise = order.value.no 
+    ? () => Promise.resolve({ no: order.value.no  })
+    : orderService.addOrder;
+    loading.value = true;
+  orderNoPromise({
+      type: order.value.resource_type, 
+      id: order.value.resource_id, 
+      name: order.value.name + ' 购买'
+    }).then(orderNoRes => {
+    order.value = { ...order.value, ...orderNoRes };
+    const no = order.value.no;
+    if(payMethod.value == PAY_METHOD_WECHAT) {
+      privateOrderPayByWechat(no);
+    }
+    if(payMethod.value == PAY_METHOD_ALIPAY) {
+      privateOrderPayByAlipay(no);
+    }
+    if(payMethod.value == PAY_METHOD_HEART) {
+      privateOrderPayByHeart();
+    }
+  }).finally(() => {
+    loading.value = false;
+  });
+}
+
 function handleOrderCancel() {
   messageBoxData.value = {
     img: CAUTION_IMG,
@@ -168,46 +209,6 @@ function handleOrderCancel() {
   messageBoxVisible.value = true
 }
 
-function handleOrderPay() {
-  if (!payMethod.value) {
-    ElMessage({
-      message: `请选择支付方式`,
-      type: 'warning'
-    })
-    return
-  }
-  if (commodity_count.value <= 0) {
-    ElMessage({
-      message: `请添加商品数量`,
-      type: 'warning'
-    })
-    return
-  }
-  privateOrderPayGetOrderNo().then((orderRes) => {
-    console.log('orderRes：', orderRes)
-    const { no } = orderRes
-    console.log('no：', no)
-    order.value = {
-      ...order.value,
-      ...orderRes
-    }
-    console.log('order.value：', order.value)
-
-    switch (payMethod.value) {
-      case PAY_METHOD_WECHAT:
-        privateOrderPayByWechat(no)
-        break
-      case PAY_METHOD_ALIPAY:
-        privateOrderPayByAlipay(no)
-        break
-      case PAY_METHOD_HEART:
-        privateOrderPayByHeart()
-        break
-      default:
-        break
-    }
-  })
-}
 
 function handleOrderStatusCheck() {
   if (order.value.status === PAY_STATUS_FAILED) {
@@ -244,32 +245,31 @@ function privateOrderCancelByComfirm() {
     })
 }
 
-function privateOrderPayGetOrderNo() {
-  const { no, resource_type, resource_id } = order.value
-  if (no) {
-    console.log('00no：', no)
-    return Promise.resolve({
-      no
-    })
-  }
-  return orderService.addOrder({
-    resource_type,
-    resource_id,
-    remark: order.value.name + ' 购买'
-  })
-}
+// function privateOrderPayGetOrderNo() {
+//   const { no, resource_type, resource_id } = order.value
+//   if (no) {
+//     console.log('00no：', no)
+//     return Promise.resolve({
+//       no
+//     })
+//   }
+//   return orderService.addOrder({
+//     resource_type,
+//     resource_id,
+//     remark: order.value.name + ' 购买'
+//   })
+// }
 
 function privateOrderPayByWechat(no) {
   loading.value = true
   orderService
     .payByWechat(no)
     .then((res) => {
-      console.log('res：', res)
+      // console.log('res：', res)
       wechatQrcodeImage.value = res.qrcode
       wechatQrcodeVisible.value = true
-      console.log('wechatQrcodeImage.value：', wechatQrcodeImage.value)
-      console.log('wechatQrcodeVisible.value：', wechatQrcodeVisible.value)
-
+      // console.log('wechatQrcodeImage.value：', wechatQrcodeImage.value)
+      // console.log('wechatQrcodeVisible.value：', wechatQrcodeVisible.value)
       privateOrderPayCheck()
     })
     .finally(() => {
@@ -283,7 +283,7 @@ function privateOrderPayByAlipay(no) {
   orderService.payByAlipay(no, {
     return_url: return_url
   })
-  privateOrderPayCheck(true)
+  privateOrderPayCheck();
 }
 
 function privateOrderPayByHeart() {
@@ -293,12 +293,7 @@ function privateOrderPayByHeart() {
     heartNotEnoughtDialogVisible.value = true
     return
   } else {
-    privateOrderPayByHeartCheck()
-  }
-}
-
-function privateOrderPayByHeartCheck() {
-  messageBoxData.value = {
+    messageBoxData.value = {
     img: CAUTION_IMG,
     imgWidth: 150,
     imgHeight: 150,
@@ -309,19 +304,21 @@ function privateOrderPayByHeartCheck() {
     cancelBtnText: '等等',
     showCancelBtn: true,
     maskCancel: false,
-    confirm: privateHeartCheckbyConfirm,
+    confirm: privateOrderPayByHeartConfirm,
     cancelMethod: handleCloseMsgBox
   }
   messageBoxVisible.value = true
+  }
 }
 
 
-function privateOrderPayCheck(show = false, once = false) {
+function privateOrderPayCheck( once = false) {
   const { no } = order.value
   orderService.orderCheck(no).then((res) => {
+    order.value.status = res.status;
     if (res.status === PAY_STATUS_SUCCESS) {
       wechatQrcodeVisible.value = false
-      order.value.status = PAY_STATUS_SUCCESS
+      // order.value.status = PAY_STATUS_SUCCESS
       payStatusDialogVisible.value = true
       routeCountDown.value = 5
       orderPayCheckTimer = setInterval(() => {
@@ -334,20 +331,28 @@ function privateOrderPayCheck(show = false, once = false) {
       }, 1000)
     } else if (res.status === PAY_STATUS_FAILED) {
       wechatQrcodeVisible.value = false
-      order.value.status = PAY_STATUS_FAILED
+      // order.value.status = PAY_STATUS_FAILED
       payStatusDialogVisible.value = true
-    } else {
-      if (show) {
-        payStatusDialogVisible.value = true
-      }
-      order.value.status = PAY_STATUS_PENDING
+    } else if(res.status === PAY_STATUS_PENDING) {
       if ((wechatQrcodeVisible.value || payStatusDialogVisible.value) && !once) {
         const timer = setTimeout(() => {
-          privateOrderPayCheck()
-          clearTimeout(timer)
-        }, 1000 * 1)
+          privateOrderPayCheck();
+          clearTimeout(timer);
+        }, 1000 * 1);
       }
     }
+    // {
+    //   if (show) {
+    //     payStatusDialogVisible.value = true
+    //   }
+    //   order.value.status = PAY_STATUS_PENDING
+    //   if ((wechatQrcodeVisible.value || payStatusDialogVisible.value) && !once) {
+    //     const timer = setTimeout(() => {
+    //       privateOrderPayCheck()
+    //       clearTimeout(timer)
+    //     }, 1000 * 1)
+    //   }
+    // }
   })
 }
 function privateOrderPaySuccess() {
@@ -372,7 +377,7 @@ function privateOrderPaySuccess() {
   clearInterval(orderPayCheckTimer)
 }
 
-function privateHeartCheckbyConfirm() {
+function privateOrderPayByHeartConfirm() {
   orderService.payByHeart(order.value.no).then(() => {
     ElMessage({
       message: `${[PAY_METHOD_HEART].indexOf(payMethod.value) > -1 ? '兑换' : '支付'}成功`,
